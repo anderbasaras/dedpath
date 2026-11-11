@@ -1,0 +1,163 @@
+# =============================================================================
+# dedpath — project metadata and tool configuration (single source of truth)
+# =============================================================================
+
+[project]
+name = "dedpath"
+dynamic = ["version"] # read from src/dedpath/__init__.py (see [tool.hatch.version])
+description = "Parse, analyse, diagnose and safely post-process wire-laser DED G-code (Sinumerik 840D dialect first)."
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [{ name = "Ander Basaras Montalvo" }]
+requires-python = ">=3.12"
+keywords = [
+    "additive-manufacturing",
+    "directed-energy-deposition",
+    "ded",
+    "g-code",
+    "sinumerik",
+    "toolpath",
+    "process-monitoring",
+]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Manufacturing",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering",
+    "Typing :: Typed",
+]
+# Runtime dependencies arrive in Phase 1 (polars, numpy, pydantic, pyyaml...).
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/anderbasaras/dedpath"
+Repository = "https://github.com/anderbasaras/dedpath"
+Issues = "https://github.com/anderbasaras/dedpath/issues"
+Changelog = "https://github.com/anderbasaras/dedpath/blob/main/CHANGELOG.md"
+
+# PEP 735 dependency groups: development-only tools. Never shipped in the wheel.
+# `uv sync` installs the "dev" group by default.
+[dependency-groups]
+dev = [
+    "pytest>=8.4",
+    "pytest-cov>=7.0",
+    "hypothesis>=6.140",
+    "ruff>=0.14",
+    "mypy>=1.18",
+    "pre-commit>=4.3",
+    "packaging>=24.0", # used by tests to validate PEP 440 versions
+]
+
+# -----------------------------------------------------------------------------
+# Build backend
+# -----------------------------------------------------------------------------
+[build-system]
+requires = ["hatchling>=1.27"] # 1.27+ understands PEP 639 license metadata
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/dedpath/__init__.py" # single source of the version string
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/dedpath"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/dedpath", "tests", "README.md", "LICENSE", "CHANGELOG.md"]
+
+# -----------------------------------------------------------------------------
+# Ruff — linter + formatter (replaces flake8, isort, black, pyupgrade...)
+# -----------------------------------------------------------------------------
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+extend-exclude = ["docs/dev-log"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes (unused imports/variables, undefined names)
+    "I",   # isort (import order)
+    "B",   # flake8-bugbear (likely bugs)
+    "UP",  # pyupgrade (modern syntax for py312)
+    "SIM", # flake8-simplify
+    "N",   # pep8-naming
+    "PT",  # flake8-pytest-style
+    "RUF", # ruff-specific rules
+    "D",   # pydocstyle (docstrings feed mkdocstrings in Phase 6)
+    "PL",  # pylint subset
+    "PTH", # prefer pathlib over os.path
+    "C4",  # comprehensions
+    "NPY", # NumPy-specific rules (useful from Phase 1)
+]
+ignore = [
+    "D105", # magic methods do not need docstrings
+    "D107", # __init__ documented at class level
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D", "PLR2004"] # no docstrings / magic numbers allowed in tests
+"app/**" = ["D"]
+
+[tool.ruff.format]
+quote-style = "double"
+line-ending = "lf" # identical output on Windows and Linux CI
+docstring-code-format = true
+
+# -----------------------------------------------------------------------------
+# mypy — static type checking (strict on the library)
+# -----------------------------------------------------------------------------
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unreachable = true
+enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
+mypy_path = "src"
+files = ["src"]
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+
+# -----------------------------------------------------------------------------
+# pytest + coverage
+# -----------------------------------------------------------------------------
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+addopts = [
+    "-ra",                    # summary of skipped/xfailed/errors at the end
+    "--strict-markers",       # typo in a marker name = error
+    "--strict-config",        # typo in this config = error
+    "--import-mode=importlib", # tests import the INSTALLED package, no sys.path hacks
+]
+xfail_strict = true
+filterwarnings = ["error"] # warnings fail tests unless explicitly allowed
+markers = [
+    "slow: long-running tests (performance, big synthetic programs)",
+]
+
+[tool.coverage.run]
+source = ["dedpath"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+fail_under = 80 # success criterion: core coverage > 80 %
+exclude_also = [
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "@overload",
+]

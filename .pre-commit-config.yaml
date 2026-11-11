@@ -1,0 +1,76 @@
+# pre-commit: checks that run automatically on every `git commit`.
+# Install the git hooks once per clone:   uv run pre-commit install
+# Run everything by hand:                  uv run pre-commit run --all-files
+#
+# Design choice: ruff and mypy run as LOCAL hooks through `uv run`, so they use
+# exactly the versions pinned in uv.lock (the same ones CI uses). With the usual
+# remote hooks, pre-commit would install its own copies and versions could drift.
+
+default_install_hook_types: [pre-commit, commit-msg]
+default_stages: [pre-commit]
+
+repos:
+  # Generic hygiene checks maintained by the pre-commit project.
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+        args: [--fix=lf]
+        exclude: '\.(ps1|bat|cmd)$'
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-case-conflict # Windows filesystems are case-insensitive
+      - id: check-added-large-files # big files are usually data dumps: stop and think
+        args: [--maxkb=500]
+      - id: detect-private-key
+
+  - repo: local
+    hooks:
+      # --- Confidentiality guards (see scripts/check_forbidden_terms.py) ---
+      - id: forbidden-terms
+        name: confidential terms (staged files)
+        entry: uv run python scripts/check_forbidden_terms.py
+        language: system
+        types: [text]
+        # uv.lock is 100 % machine-generated (package names, URLs, sha256 hashes):
+        # short terms match by chance inside hex hashes -> false positives.
+        exclude: '^uv\.lock$'
+      - id: forbidden-terms-commit-msg
+        name: confidential terms (commit message)
+        entry: uv run python scripts/check_forbidden_terms.py
+        language: system
+        stages: [commit-msg]
+
+      - id: gcode-must-be-synthetic
+        name: G-code files carry the DEDPATH-SYNTHETIC marker
+        language: pygrep
+        entry: "DEDPATH-SYNTHETIC"
+        args: [--negate] # fail when the marker is MISSING
+        files: '(?i)\.(mpf|spf|nc|ngc|gcode|cnc)$'
+
+      # --- Code quality (versions from uv.lock) ---
+      - id: ruff-check
+        name: ruff check
+        entry: uv run ruff check --fix --exit-non-zero-on-fix
+        language: system
+        types_or: [python, pyi]
+      - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format
+        language: system
+        types_or: [python, pyi]
+      - id: mypy
+        name: mypy (strict, src/)
+        entry: uv run mypy src
+        language: system
+        types: [python]
+        pass_filenames: false
+      - id: uv-lock
+        name: uv.lock is in sync with pyproject.toml
+        entry: uv lock --check
+        language: system
+        files: '^(pyproject\.toml|uv\.lock)$'
+        pass_filenames: false

@@ -1,0 +1,13 @@
+# Generic SINUMERIK 840D dialect profile for dedpath.
+#
+# Phase 0 placeholder: it exists so packaging can be verified from day one
+# (this file must end up inside the wheel). The real schema and values are
+# defined and validated (Pydantic v2) in Phase 1.
+#
+# Confidentiality rule: every value in this file must be generic and backed by
+# a public reference (e.g. the Siemens programming manual). Never copy machine
+# data, vendor-specific M-codes or process parameters from a real machine.
+
+schema_version: 0
+name: sinumerik_generic
+description: Generic profile for the Siemens SINUMERIK 840D G-code dialect (placeholder).
