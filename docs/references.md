@@ -2,7 +2,7 @@
 
 > Documento de trabajo (español). Las referencias con copyright **no se suben al
 > repositorio**: se guardan en la carpeta local `refs/` (ignorada por git en
-> `.gitignore`) en cada portátil.
+> `.gitignore`) del equipo de desarrollo.
 
 ## Manuales de Siemens (sintaxis SINUMERIK, plan maestro §7)
 

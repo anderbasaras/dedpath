@@ -9,11 +9,12 @@ chat coordinador y en el chat de la fase siguiente.
 
 | Fase | Fichero | Estado |
 |---|---|---|
-| F0 — Alcance, criterios, setup, CI | `phase-0.md` | en curso |
+| F0 — Alcance, criterios, setup, CI | [`phase-0.md`](phase-0.md) | validada (tag `phase-0`) |
+| F1 — Parser, modelo de datos, perfil de dialecto, generador sintético | `phase-1.md` | pendiente |
 
-## Configuración local por portátil (no va al repo)
+## Configuración local del equipo de desarrollo (no va al repo)
 
-Cada clon necesita, una vez:
+El clon necesita, una vez:
 
 1. `uv sync` y `uv run pre-commit install`.
 2. La lista privada de términos confidenciales en
@@ -23,3 +24,5 @@ Cada clon necesita, una vez:
 3. Identidad git del repo con el correo personal o el `noreply` de GitHub
    (`git config user.email ...` **dentro del repo**, nunca el corporativo).
 4. Manuales de referencia descargados en `refs/` (ver `docs/references.md`).
+5. Ningún software que inyecte DLLs en todos los procesos activo mientras se
+   desarrolla (ver riesgo «Windhawk» en `phase-0.md`).

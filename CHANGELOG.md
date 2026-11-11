@@ -16,3 +16,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   build job that checks the wheel contents.
 - Placeholder generic SINUMERIK 840D dialect profile shipped inside the package.
 - Project documentation: v1 scope (`docs/scope.md`), references and dev-log template.
+- Phase 0 hand-off (`docs/dev-log/phase-0.md`).
